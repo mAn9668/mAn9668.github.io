@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color:      #d9d9d9;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .links-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .links {
+            display: inline-block;
+        }
+
+        .links a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #333;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .links a:hover {
+            background-color: #555;
+        }
+
+        .links a .delete-link {
+            display: none;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ff4d4d;
+            color: #fff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            font-size: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .links a:hover .delete-link {
+            display: block;
+        }
+
+        #time {
+            font-size: 24px;
+            color:   #b3d9ff;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        #add-link {
+            font-size: 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        #search-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #search-bar input[type="text"] {
+            padding: 9px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px 0 0 50px;
+            width: 500px;
+        }
+
+        #search-bar select {
+            padding: 9px;
+            font-size: 15px;
+            border: none;
+            border-radius: 0 50px 50px 0;
+            background-color: #000000;
+            color: #fff;
+            width: 100px;
+
+        }
+    </style>
+</head>
+<body>
+    <h1 id="greeting"></h1>
+<style>
+body {
+  background-image: url('sky.jpg');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: 100% 100%;
+}
+</style>
+
+
+    <div id="search-bar">
+        <input type="text" id="search-input" placeholder="Search...">
+        <select id="search-engine">
+            <option value="https://www.google.com/search?q=">Google</option>
+            <option value="https://www.bing.com/search?q=">Bing</option>
+            <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+            <option value="https://www.yahoo.com/search?p=">Yahoo</option>
+        </select>
+    </div>
+
+    <div class="links-container">
+        <div class="links">
+            <!-- Links will be added here -->
+        </div>
+        <button id="add-link">+</button>
+    </div>
+
+    <div id="time"></div>
+
+    <script>
+        // Update greeting based on the time of day
+        const currentHour = new Date().getHours();
+        let greeting;
+        if (currentHour < 12) {
+            greeting = "GOOD MORNING";
+        } else if (currentHour < 18) {
+            greeting = "GOOD AFTERNOON";
+        } else {
+            greeting = "GOOD EVENING";
+        }
+        document.getElementById("greeting").textContent = greeting;
+
+        // Update time every second
+        function updateTime() {
+            const now = new Date();
+            const timeString = `${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+            document.getElementById("time").textContent = timeString;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Add/Delete links functionality
+        const addLinkButton = document.getElementById('add-link');
+        const linksContainer = document.querySelector('.links');
+
+        function saveLinksToLocalStorage() {
+    const links = Array.from(linksContainer.querySelectorAll('a')).map(link => ({
+        name: link.textContent.replace(/\s*x\s*$/, ''), // Remove the "x" from the link name
+        url: link.href
+    }));
+    localStorage.setItem('links', JSON.stringify(links));
+}
+
+
+        addLinkButton.addEventListener('click', () => {
+            const linkName = prompt('Enter a name for the new link:');
+            if (linkName) {
+                const linkUrl = prompt('Enter the link URL:');
+                if (linkUrl) {
+                    const newLinkElement = document.createElement('a');
+                    newLinkElement.href = `https://${linkUrl}`; // Add 'https://' in front of the URL
+                
+                    newLinkElement.textContent = linkName;
+                    const deleteLink = document.createElement('span');
+                    deleteLink.className = 'delete-link';
+                    deleteLink.textContent = 'x';
+                    deleteLink.addEventListener('click', (e) => {
+                        e.preventDefault(); // Prevent the link from opening
+                        e.target.parentElement.remove();
+                        saveLinksToLocalStorage();
+                    });
+                    newLinkElement.appendChild(deleteLink);
+                    linksContainer.appendChild(newLinkElement);
+                    saveLinksToLocalStorage();
+                }
+            }
+        });
+
+
+        // Retrieve links from localStorage and recreate them
+        window.onload = function() {
+            const storedLinks = JSON.parse(localStorage.getItem('links')) || [];
+            storedLinks.forEach(link => {
+                const newLinkElement = document.createElement('a');
+                newLinkElement.href = link.url;
+
+                newLinkElement.textContent = link.name;
+                const deleteLink = document.createElement('span');
+                deleteLink.className = 'delete-link';
+                deleteLink.textContent = 'x';
+                deleteLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.target.parentElement.remove();
+                    saveLinksToLocalStorage();
+                });
+                newLinkElement.appendChild(deleteLink);
+                linksContainer.appendChild(newLinkElement);
+            });
+        };
+
+
+
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        const searchEngine = document.getElementById('search-engine');
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const searchQuery = searchInput.value.trim();
+                const searchUrl = searchEngine.value + encodeURIComponent(searchQuery);
+                window.open(searchUrl, '_self');
+            }
+        });
+    </script>
+</body>
+</html>
