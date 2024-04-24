@@ -4,7 +4,6 @@
     <title>Home</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
-
         body {
             font-family: 'Orbitron', sans-serif;
             text-align: center;
@@ -16,7 +15,6 @@
             align-items: center;
             min-height: 100vh;
         }
-
         h1 {
             color:      #d9d9d9;
             position: absolute;
@@ -25,18 +23,14 @@
             text-transform: uppercase;
             font-weight: 700;
         }
-
         .links-container {
             display: flex;
             justify-content: center;
             align-items: center;
         }
-
         .links {
-            display: flex;
-            align-items: center;
+            display: inline-block;
         }
-
         .links a {
             display: inline-block;
             padding: 10px 20px;
@@ -47,11 +41,9 @@
             border-radius: 5px;
             position: relative;
         }
-
         .links a:hover {
             background-color: #555;
         }
-
         .links a .delete-link {
             display: none;
             position: absolute;
@@ -67,11 +59,9 @@
             text-align: center;
             cursor: pointer;
         }
-
         .links a:hover .delete-link {
             display: block;
         }
-
         #time {
             font-size: 24px;
             color:   #b3d9ff;
@@ -79,25 +69,22 @@
             top: 10px;
             right: 10px;
         }
-
         #add-link {
             font-size: 24px;
-             background-color: #4CAF50;
-             color: white;
-           border: none;
-              border-radius: 50%;
-              width: 40px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
             height: 40px;
-              cursor: pointer;
-              margin-left: 10px;
+            cursor: pointer;
+            margin-left: 10px;
         }
-
         #search-bar {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
         }
-
         #search-bar input[type="text"] {
             padding: 9px;
             font-size: 16px;
@@ -105,7 +92,6 @@
             border-radius: 50px 0 0 50px;
             width: 500px;
         }
-
         #search-bar select {
             padding: 9px;
             font-size: 15px;
@@ -114,7 +100,6 @@
             background-color: #000000;
             color: #fff;
             width: 100px;
-
         }
     </style>
 </head>
@@ -129,8 +114,6 @@ body {
   
 }
 </style>
-
-
     <div id="search-bar">
         <input type="text" id="search-input" placeholder="Search..." tabindex="0">
         <select id="search-engine">
@@ -140,17 +123,13 @@ body {
             <option value="https://www.yahoo.com/search?p=">Yahoo</option>
         </select>
     </div>
-
     <div class="links-container">
         <div class="links">
             <!-- Links will be added here -->
-          
         </div>
-          <button id="add-link">+</button>
+        <button id="add-link">+</button>
     </div>
-
     <div id="time"></div>
-
     <script>
         // Update greeting based on the time of day
         const currentHour = new Date().getHours();
@@ -163,7 +142,6 @@ body {
             greeting = "GOOD EVENING";
         }
         document.getElementById("greeting").textContent = greeting;
-
         // Update time every second
         function updateTime() {
             const now = new Date();
@@ -172,11 +150,9 @@ body {
         }
         updateTime();
         setInterval(updateTime, 1000);
-
         // Add/Delete links functionality
         const addLinkButton = document.getElementById('add-link');
         const linksContainer = document.querySelector('.links');
-
         function saveLinksToLocalStorage() {
     const links = Array.from(linksContainer.querySelectorAll('a')).map(link => ({
         name: link.textContent.replace(/\s*x\s*$/, ''), // Remove the "x" from the link name
@@ -184,8 +160,6 @@ body {
     }));
     localStorage.setItem('links', JSON.stringify(links));
 }
-
-
         addLinkButton.addEventListener('click', () => {
             const linkName = prompt('Enter a name for the new link:');
             if (linkName) {
@@ -209,15 +183,12 @@ body {
                 }
             }
         });
-
-
         // Retrieve links from localStorage and recreate them
         window.onload = function() {
             const storedLinks = JSON.parse(localStorage.getItem('links')) || [];
             storedLinks.forEach(link => {
                 const newLinkElement = document.createElement('a');
                 newLinkElement.href = link.url;
-
                 newLinkElement.textContent = link.name;
                 const deleteLink = document.createElement('span');
                 deleteLink.className = 'delete-link';
@@ -234,11 +205,9 @@ body {
         };
 
 
-
         // Search functionality
         const searchInput = document.getElementById('search-input');
         const searchEngine = document.getElementById('search-engine');
-
         searchInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 const searchQuery = searchInput.value.trim();
