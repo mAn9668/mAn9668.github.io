@@ -211,6 +211,7 @@ body {
     const searchEngine = document.getElementById('search-engine');
     searchInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
+            event.preventDefault();
             const searchQuery = searchInput.value.trim();
             const selectedEngine = searchEngine.value;
 
