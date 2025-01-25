@@ -118,6 +118,7 @@ body {
         <input type="text" id="search-input" placeholder="Search..." tabindex="0">
         <select id="search-engine">
             <option value="https://www.google.com/search?q=">Google</option>
+             <option value="website">Website</option>
             <option value="https://www.bing.com/search?q=">Bing</option>
             <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
             <option value="https://www.yahoo.com/search?p=">Yahoo</option>
@@ -207,22 +208,28 @@ body {
 
         // Search functionality
         const searchInput = document.getElementById('search-input');
-        const searchEngine = document.getElementById('search-engine');
-        searchInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                const searchQuery = searchInput.value.trim();
-                const isUrl = /^(https?:\/\/)/i.test(searchQuery);
+    const searchEngine = document.getElementById('search-engine');
+    searchInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            const searchQuery = searchInput.value.trim();
+            const selectedEngine = searchEngine.value;
 
-                if (isUrl) {
-                    // Redirect to the entered URL
-                    window.open(searchQuery, '_self');
-                } else {
-                    // Perform a search using the selected search engine
-                    const searchUrl = searchEngine.value + encodeURIComponent(searchQuery);
-                    window.open(searchUrl, '_self');
-                }
+            // Check for direct URL
+            const isDirectUrl = /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/i.test(searchQuery);
+
+            if (selectedEngine === 'website' || isDirectUrl) {
+                // Prepend https:// if not already present
+                const url = isDirectUrl 
+                    ? (searchQuery.startsWith('http') ? searchQuery : `https://${searchQuery}`)
+                    : searchQuery;
+                window.open(url, '_self');
+            } else {
+                // Perform a search using the selected search engine
+                const searchUrl = selectedEngine + encodeURIComponent(searchQuery);
+                window.open(searchUrl, '_self');
             }
-        });
+        }
+    });
     </script>
 </body>
 </html>
