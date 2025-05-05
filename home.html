@@ -132,6 +132,7 @@
         .suggestion-ddg {
             color: #de5833; /* DuckDuckGo orange for API results */
         }
+        
     </style>
 </head>
 <body>
@@ -237,6 +238,7 @@ body {
                 newLinkElement.appendChild(deleteLink);
                 linksContainer.appendChild(newLinkElement);
             });
+             addApiKeySettingsButton();
             document.getElementById('search-input').focus();
         });
 
@@ -304,85 +306,120 @@ body {
             };
         }
         
-        // Fetch suggestions from DuckDuckGo API
-        async function fetchDuckDuckGoSuggestions(query) {
-            if (!query) return [];
+        // Fetch suggestions from Google API
+       async function fetchGoogleSuggestions(query) {
+    if (!query) return [];
+    
+    // Check if API key is available
+    if (!googleApiKey) {
+        console.log('No Google API key found');
+        return [];
+    }
+    
+    try {
+        const response = await fetch(`https://www.googleapis.com/customsearch/v1?key=${googleApiKey}&cx=partner-pub-9610725899755752:4624891944&q=${encodeURIComponent(query)}`);
+        if (response.ok) {
+            const data = await response.json();
             
-            try {
-                const response = await fetch(`https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`);
-                if (response.ok) {
-                    const data = await response.json();
-                    return data && Array.isArray(data) ? data.map(item => item.phrase) : [];
-                }
-                return [];
-            } catch (error) {
-                console.error('Error fetching suggestions:', error);
-                return [];
+            // Extract suggestions from Google response
+            if (data.items && Array.isArray(data.items)) {
+                return data.items.map(item => item.title).slice(0, 5);
             }
+            return [];
         }
+        // If API key is invalid or quota exceeded
+        if (response.status === 403 || response.status === 400) {
+            alert('Google API key is invalid or daily quota exceeded. Please check your API key.');
+            googleApiKey = '';
+            localStorage.removeItem('googleApiKey');
+        }
+        return [];
+    } catch (error) {
+        console.error('Error fetching Google suggestions:', error);
+        return [];
+    }
+}
+
         
-        // Display suggestions from both history and DuckDuckGo
-        async function showSuggestions(query) {
-            if (!query) {
-                suggestionsContainer.style.display = 'none';
-                return;
-            }
-            
-            // Clear previous suggestions
-            suggestionsContainer.innerHTML = '';
-            
-            // Get history suggestions
-            const historyMatches = searchHistory.filter(item => 
-                item.toLowerCase().includes(query.toLowerCase())
-            ).slice(0, 5);
-            
-            // Add history suggestions to the container
-            historyMatches.forEach(suggestion => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item suggestion-history';
-                div.textContent = suggestion;
-                div.tabIndex = 0; // Make it focusable
-                div.addEventListener('click', () => {
-                    searchInput.value = suggestion;
-                    suggestionsContainer.style.display = 'none';
-                    performSearch(suggestion);
-                });
-                suggestionsContainer.appendChild(div);
-            });
-            
-            try {
-                // Get DuckDuckGo suggestions
-                const ddgSuggestions = await fetchDuckDuckGoSuggestions(query);
-                
-                // Add DuckDuckGo suggestions to the container
-                if (ddgSuggestions && ddgSuggestions.length) {
-                    ddgSuggestions.slice(0, 5).forEach(suggestion => {
-                        // Skip if this suggestion is already in the history suggestions
-                        if (!historyMatches.includes(suggestion)) {
-                            const div = document.createElement('div');
-                            div.className = 'suggestion-item suggestion-ddg';
-                            div.textContent = suggestion;
-                            div.tabIndex = 0; // Make it focusable
-                            div.addEventListener('click', () => {
-                                searchInput.value = suggestion;
-                                suggestionsContainer.style.display = 'none';
-                                performSearch(suggestion);
-                            });
-                            suggestionsContainer.appendChild(div);
-                        }
+        // Display suggestions from both history and Google
+       async function showSuggestions(query) {
+    if (!query) {
+        suggestionsContainer.style.display = 'none';
+        return;
+    }
+    
+    // Check if we need to prompt for API key
+    if (!googleApiKey) {
+        // Create a prompt button in the suggestions container
+        suggestionsContainer.innerHTML = '';
+        const apiKeyPrompt = document.createElement('div');
+        apiKeyPrompt.className = 'suggestion-item';
+        apiKeyPrompt.style.backgroundColor = '#f5f5f5';
+        apiKeyPrompt.style.color = '#333';
+        apiKeyPrompt.style.textAlign = 'center';
+        apiKeyPrompt.textContent = 'Google API key required. Click here to add your key.';
+        apiKeyPrompt.tabIndex = 0;
+        apiKeyPrompt.addEventListener('click', promptForApiKey);
+        suggestionsContainer.appendChild(apiKeyPrompt);
+        suggestionsContainer.style.display = 'block';
+        return;
+    }
+    
+    // Clear previous suggestions
+    suggestionsContainer.innerHTML = '';
+    
+    // Get history suggestions
+    const historyMatches = searchHistory.filter(item => 
+        item.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 5);
+    
+    // Add history suggestions to the container
+    historyMatches.forEach(suggestion => {
+        const div = document.createElement('div');
+        div.className = 'suggestion-item suggestion-history';
+        div.textContent = suggestion;
+        div.tabIndex = 0; // Make it focusable
+        div.addEventListener('click', () => {
+            searchInput.value = suggestion;
+            suggestionsContainer.style.display = 'none';
+            performSearch(suggestion);
+        });
+        suggestionsContainer.appendChild(div);
+    });
+    
+    try {
+        // Get Google suggestions
+        const googleSuggestions = await fetchGoogleSuggestions(query);
+        
+        // Add Google suggestions to the container
+        if (googleSuggestions && googleSuggestions.length) {
+            googleSuggestions.forEach(suggestion => {
+                // Skip if this suggestion is already in the history suggestions
+                if (!historyMatches.includes(suggestion)) {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item suggestion-google';
+                    div.textContent = suggestion;
+                    div.tabIndex = 0; // Make it focusable
+                    div.addEventListener('click', () => {
+                        searchInput.value = suggestion;
+                        suggestionsContainer.style.display = 'none';
+                        performSearch(suggestion);
                     });
+                    suggestionsContainer.appendChild(div);
                 }
-            } catch (error) {
-                console.error("Error processing DDG suggestions:", error);
-            }
-            
-            // Show suggestions container if there are any suggestions
-            if (suggestionsContainer.children.length > 0) {
-                suggestionsContainer.style.display = 'block';
-            } else {
-                suggestionsContainer.style.display = 'none';
-            }
+            });
         }
+    } catch (error) {
+        console.error("Error processing Google suggestions:", error);
+    }
+    
+    // Show suggestions container if there are any suggestions
+    if (suggestionsContainer.children.length > 0) {
+        suggestionsContainer.style.display = 'block';
+    } else {
+        suggestionsContainer.style.display = 'none';
+    }
+}
         
         // Debounced search input handler
         const debouncedShowSuggestions = debounce((query) => {
@@ -478,7 +515,59 @@ body {
                 }
             }
         });
+        // Add function to prompt for API key
+function promptForApiKey() {
+    const key = prompt('Please enter your Google Custom Search API Key:');
+    if (key && key.trim()) {
+        googleApiKey = key.trim();
+        localStorage.setItem('googleApiKey', googleApiKey);
+        alert('API key saved! You can now use Google search suggestions.');
+        // Refresh suggestions if there's a query
+        if (searchInput.value.trim()) {
+            showSuggestions(searchInput.value.trim());
+        }
+    }
+}
         
+// Add a settings button to the UI
+function addApiKeySettingsButton() {
+    const searchBarContainer = document.getElementById('search-bar');
+    
+    const settingsButton = document.createElement('button');
+    settingsButton.id = 'api-settings';
+    settingsButton.style.marginLeft = '5px';
+    settingsButton.style.padding = '5px 10px';
+    settingsButton.style.backgroundColor = '#5f6368';
+    settingsButton.style.color = 'white';
+    settingsButton.style.border = 'none';
+    settingsButton.style.borderRadius = '5px';
+    settingsButton.style.cursor = 'pointer';
+    settingsButton.textContent = '⚙️';
+    settingsButton.title = 'API Settings';
+    
+    settingsButton.addEventListener('click', () => {
+        const action = confirm(
+            googleApiKey 
+                ? 'Your Google API key is set. Would you like to change it?' 
+                : 'You need to set a Google API key to use search suggestions. Set it now?'
+        );
+        
+        if (action) {
+            promptForApiKey();
+        }
+    });
+    
+    searchBarContainer.appendChild(settingsButton);
+}
+        const styleElement = document.createElement('style');
+styleElement.textContent = `
+    .suggestion-google {
+        color: #4285f4; /* Google blue for API results */
+    }
+`;
+document.head.appendChild(styleElement);
+
+
         // Console log for debugging
         console.log("Script loaded. Search history items:", searchHistory.length);
     </script>
